@@ -5,5 +5,6 @@ COPY . /app
 RUN pip install --upgrade pip
 RUN pip install plac \
     tqdm \
-    requests
+    requests \
+    flask-cors
 RUN pip install .

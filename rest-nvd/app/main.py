@@ -1,12 +1,14 @@
 from flask import Flask
 from flask import request
 from flask import jsonify
+from flask_cors import CORS
 
 import json
 import os
 import logging
 
 app = Flask(__name__)
+CORS(app)
 
 # Setup gunicorn logging
 #
