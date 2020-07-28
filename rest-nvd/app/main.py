@@ -16,7 +16,7 @@ app = Flask(__name__)
 CORS(app)
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'top secret!'
-token_serializer = Serializer(app.config['SECRET_KEY'], expires_in=3600)
+token_serializer = Serializer(app.config['SECRET_KEY'])
 
 
 # Setup gunicorn logging
