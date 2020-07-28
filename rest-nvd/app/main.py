@@ -46,7 +46,7 @@ auth = HTTPTokenAuth('Bearer')
 users = ['admin']
 for user in users:
     token = token_serializer.dumps({'username': user}).decode('utf-8')
-    print('*** token for {}: {}\n'.format(user, token))
+    app.logger.info('*** token for {}: {}\n'.format(user, token))
 
 
 @auth.verify_token
