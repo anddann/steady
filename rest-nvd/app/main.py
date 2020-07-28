@@ -2,13 +2,22 @@ from flask import Flask
 from flask import request
 from flask import jsonify
 from flask_cors import CORS
+from flask_httpauth import HTTPTokenAuth
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+
 
 import json
 import os
 import logging
 
+from app import update
+
 app = Flask(__name__)
 CORS(app)
+
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'top secret!'
+token_serializer = Serializer(app.config['SECRET_KEY'], expires_in=3600)
+
 
 # Setup gunicorn logging
 #
@@ -31,6 +40,32 @@ if __name__ != '__main__':
 
 DATA_PATH=os.environ.get('CVE_DATA_PATH') or os.path.join(os.path.realpath(os.path.dirname(__file__)), '..', 'data')
 PREFIX_URL = "/nvd"
+
+auth = HTTPTokenAuth('Bearer')
+
+users = ['admin']
+for user in users:
+    token = token_serializer.dumps({'username': user}).decode('utf-8')
+    print('*** token for {}: {}\n'.format(user, token))
+
+
+@auth.verify_token
+def verify_token(token):
+    try:
+        data = token_serializer.loads(token)
+    except:  # noqa: E722
+        return False
+    if 'username' in data:
+        return data['username']
+
+
+
+@app.route(PREFIX_URL+'/update')
+@auth.login_required
+def runUpdate():
+    app.logger.debug('Requested Update')
+    update.main(force=False, verbose=True)
+
 
 @app.route(PREFIX_URL + '/vulnerabilities/<vuln_id>')
 def get_vuln_data(vuln_id):

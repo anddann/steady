@@ -6,5 +6,8 @@ RUN pip install --upgrade pip
 RUN pip install plac \
     tqdm \
     requests \
-    flask-cors
+    flask-cors \
+    flask-HTTPAuth \
+    itsdangerous
+
 RUN pip install .
