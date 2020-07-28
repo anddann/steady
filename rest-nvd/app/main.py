@@ -1,14 +1,13 @@
+import json
+import logging
+import os
+
 from flask import Flask
-from flask import request
 from flask import jsonify
+from flask import request
 from flask_cors import CORS
 from flask_httpauth import HTTPTokenAuth
 from itsdangerous import JSONWebSignatureSerializer as Serializer
-
-
-import json
-import os
-import logging
 
 from app import update
 
@@ -17,7 +16,6 @@ CORS(app)
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'top secret!'
 token_serializer = Serializer(app.config['SECRET_KEY'])
-
 
 # Setup gunicorn logging
 #
@@ -28,17 +26,17 @@ if __name__ != '__main__':
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(gunicorn_logger.level)
 
-#ENABLE_DASHBOARD=bool(os.environ.get('DASHBOARD')) or False
+# ENABLE_DASHBOARD=bool(os.environ.get('DASHBOARD')) or False
 
 ## monitoring dashboard
-#if ENABLE_DASHBOARD:
+# if ENABLE_DASHBOARD:
 #    app.logger.debug('Monitoring dashboard is enabled')
 #    import flask_monitoringdashboard as dashboard
 #    dashboard.bind(app)
-#else:
+# else:
 #    app.logger.debug('Monitoring dashboard is disabled')
 
-DATA_PATH=os.environ.get('CVE_DATA_PATH') or os.path.join(os.path.realpath(os.path.dirname(__file__)), '..', 'data')
+DATA_PATH = os.environ.get('CVE_DATA_PATH') or os.path.join(os.path.realpath(os.path.dirname(__file__)), '..', 'data')
 PREFIX_URL = "/nvd"
 
 auth = HTTPTokenAuth('Bearer')
@@ -59,21 +57,21 @@ def verify_token(token):
         return data['username']
 
 
-
-@app.route(PREFIX_URL+'/update')
+@app.route(PREFIX_URL + '/update')
 @auth.login_required
 def runUpdate():
     app.logger.debug('Requested Update')
     update.main(force=False, verbose=True)
+    return 'Starting Update', 202
 
 
 @app.route(PREFIX_URL + '/vulnerabilities/<vuln_id>')
 def get_vuln_data(vuln_id):
-    extended_data = request.args.get('extended', default = False, type = bool)
-    app.logger.debug('Requested data for vulnerability ' + vuln_id )
+    extended_data = request.args.get('extended', default=False, type=bool)
+    app.logger.debug('Requested data for vulnerability ' + vuln_id)
 
     year = vuln_id.split('-')[1]
-    json_file = os.path.join(DATA_PATH, year, vuln_id.upper()+'.json')
+    json_file = os.path.join(DATA_PATH, year, vuln_id.upper() + '.json')
     if not os.path.isfile(json_file):
         app.logger.info('No file found: ' + json_file)
         return '', 404
@@ -110,11 +108,14 @@ def index():
     app.logger.debug('Serving root resource')
     return "try with /nvd/vulnerabilities/<VULN_ID>"
 
+
 def predict_language(data):
-    return { "prediction": "Java", "confidence" : 0.98 }
+    return {"prediction": "Java", "confidence": 0.98}
+
 
 def predict_license(data):
-    return { "prediction": "OSS", "confidence" : 0.76 }
+    return {"prediction": "OSS", "confidence": 0.76}
+
 
 if __name__ == '__main__':
     app.run()
